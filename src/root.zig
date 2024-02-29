@@ -71,7 +71,7 @@ pub const Codepoint = packed struct {
         var codepoint = Self{};
         var length: usize = 1;
 
-        if (in == 0) {
+        if (in[0] == 0) {
             return error.NullByte;
         } else if (in[0] < 0x80) {
             codepoint.inner = @as(u21, in[0]);
@@ -343,8 +343,9 @@ pub const StaticString = struct {
     }
 
     pub fn fromUtf8Alloc(allocator: Allocator, in: []const u8) !Self {
+        var codepoints = try codepointsFromUtf8Alloc(allocator, in);
         return .{
-            .codepoints = (try codepointsFromUtf8Alloc(allocator, in)).items,
+            .codepoints = try codepoints.toOwnedSlice(),
         };
     }
 
@@ -355,8 +356,9 @@ pub const StaticString = struct {
     // Java Modified UTF-8
 
     pub fn fromMutf8Alloc(allocator: Allocator, in: []const u8) !Self {
+        var codepoints = try codepointsFromMutf8Alloc(allocator, in);
         return .{
-            .codepoints = (try codepointsFromMutf8Alloc(allocator, in)).items,
+            .codepoints = try codepoints.toOwnedSlice(),
         };
     }
 
@@ -367,8 +369,9 @@ pub const StaticString = struct {
     // UTF-16-LE
 
     pub fn fromUtf16leAlloc(allocator: Allocator, in: []const u16) !Self {
+        var codepoints = try codepointsFromUtf16leAlloc(allocator, in);
         return .{
-            .codepoints = (try codepointsFromUtf16leAlloc(allocator, in)).items,
+            .codepoints = try codepoints.toOwnedSlice(),
         };
     }
 
