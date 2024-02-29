@@ -141,7 +141,7 @@ pub const Codepoint = packed struct {
 
     // based on std.unicode.utf16DecodeSurrogatePair + wikipedia
     pub fn fromUtf16le(in: []const u16) !struct { Self, usize } {
-        var codepoint = Self{ .codepoint = 0 };
+        var codepoint = Self{};
         var length: usize = 1;
 
         switch (in[0]) {
