@@ -1,5 +1,5 @@
 .{
-    .name = "zig-unicode",
+    .name = "zig-utftools",
     .version = "0.0.0",
     .dependencies = .{},
     .paths = .{
