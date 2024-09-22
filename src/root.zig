@@ -35,25 +35,22 @@ pub fn codepointFromUtf8(in: []const u8) !struct { u21, usize } {
 }
 
 // based on std.unicode.{utf8CodepointSequenceLength, utf8Encode}
-pub fn appendCodepointToUtf8(cp: u21, out: *std.ArrayList(u8)) !void {
+pub fn writeCodepointToUtf8(cp: u21, writer: anytype) !void {
     if (cp < 0x80) {
-        try out.append(@intCast(cp));
+        try writer.writeByte(@as(u8, @intCast(cp)));
     } else if (cp < 0x800) {
-        try out.ensureUnusedCapacity(2);
-        out.appendAssumeCapacity(@intCast(0b11000000 | (cp >> 6)));
-        out.appendAssumeCapacity(@intCast(0b10000000 | (cp & 0b111111)));
+        try writer.writeByte(@as(u8, @intCast(0b11000000 | (cp >> 6))));
+        try writer.writeByte(@as(u8, @intCast(0b10000000 | (cp & 0b111111))));
     } else if (cp < 0x10000) {
         if (0xd800 <= cp and cp <= 0xdfff) return error.CannotEncodeSurrogateHalf;
-        try out.ensureUnusedCapacity(3);
-        out.appendAssumeCapacity(@intCast(0b11100000 | (cp >> 12)));
-        out.appendAssumeCapacity(@intCast(0b10000000 | ((cp >> 6) & 0b111111)));
-        out.appendAssumeCapacity(@intCast(0b10000000 | (cp & 0b111111)));
+        try writer.writeByte(@as(u8, @intCast(0b11100000 | (cp >> 12))));
+        try writer.writeByte(@as(u8, @intCast(0b10000000 | ((cp >> 6) & 0b111111))));
+        try writer.writeByte(@as(u8, @intCast(0b10000000 | (cp & 0b111111))));
     } else if (cp < 0x110000) {
-        try out.ensureUnusedCapacity(4);
-        out.appendAssumeCapacity(@intCast(0b11110000 | (cp >> 18)));
-        out.appendAssumeCapacity(@intCast(0b10000000 | ((cp >> 12) & 0b111111)));
-        out.appendAssumeCapacity(@intCast(0b10000000 | ((cp >> 6) & 0b111111)));
-        out.appendAssumeCapacity(@intCast(0b10000000 | (cp & 0b111111)));
+        try writer.writeByte(@as(u8, @intCast(0b11110000 | (cp >> 18))));
+        try writer.writeByte(@as(u8, @intCast(0b10000000 | ((cp >> 12) & 0b111111))));
+        try writer.writeByte(@as(u8, @intCast(0b10000000 | ((cp >> 6) & 0b111111))));
+        try writer.writeByte(@as(u8, @intCast(0b10000000 | (cp & 0b111111))));
     } else {
         return error.CodepointTooLarge;
     }
@@ -100,31 +97,27 @@ pub fn codepointFromMutf8(in: []const u8) !struct { u21, usize } {
 }
 
 // based on std.unicode.{utf8CodepointSequenceLength, utf8Encode} + JNI Type Docs
-pub fn appendCodepointToMutf8(cp: u21, out: *std.ArrayList(u8)) !void {
+pub fn writeCodepointToMutf8(cp: u21, writer: anytype) !void {
     if (cp == 0) {
-        try out.ensureUnusedCapacity(2);
-        out.appendAssumeCapacity(0xC0);
-        out.appendAssumeCapacity(0x80);
+        try writer.writeByte(@as(u8, 0xC0));
+        try writer.writeByte(@as(u8, 0x80));
     } else if (cp < 0x80) {
-        try out.append(@intCast(cp));
+        try writer.writeByte(@as(u8, @intCast(cp)));
     } else if (cp < 0x800) {
-        try out.ensureUnusedCapacity(2);
-        out.appendAssumeCapacity(@intCast(0b11000000 | (cp >> 6)));
-        out.appendAssumeCapacity(@intCast(0b10000000 | (cp & 0b111111)));
+        try writer.writeByte(@as(u8, @intCast(0b11000000 | (cp >> 6))));
+        try writer.writeByte(@as(u8, @intCast(0b10000000 | (cp & 0b111111))));
     } else if (cp < 0x10000) {
         if (0xd800 <= cp and cp <= 0xdfff) return error.CannotEncodeSurrogateHalf;
-        try out.ensureUnusedCapacity(3);
-        out.appendAssumeCapacity(@intCast(0b11100000 | (cp >> 12)));
-        out.appendAssumeCapacity(@intCast(0b10000000 | ((cp >> 6) & 0b111111)));
-        out.appendAssumeCapacity(@intCast(0b10000000 | (cp & 0b111111)));
+        try writer.writeByte(@as(u8, @intCast(0b11100000 | (cp >> 12))));
+        try writer.writeByte(@as(u8, @intCast(0b10000000 | ((cp >> 6) & 0b111111))));
+        try writer.writeByte(@as(u8, @intCast(0b10000000 | (cp & 0b111111))));
     } else if (cp < 0x110000) {
-        try out.ensureUnusedCapacity(6);
-        out.appendAssumeCapacity(0b11101101);
-        out.appendAssumeCapacity(@intCast(0b10100000 | (cp >> 16)));
-        out.appendAssumeCapacity(@intCast(0b10000000 | ((cp >> 10) & 0b111111)));
-        out.appendAssumeCapacity(0b11101101);
-        out.appendAssumeCapacity(@intCast(0b10110000 | ((cp >> 6) & 0b1111)));
-        out.appendAssumeCapacity(@intCast(0b10000000 | (cp & 0b111111)));
+        try writer.writeByte(@as(u8, 0b11101101));
+        try writer.writeByte(@as(u8, @intCast(0b10100000 | (cp >> 16))));
+        try writer.writeByte(@as(u8, @intCast(0b10000000 | ((cp >> 10) & 0b111111))));
+        try writer.writeByte(@as(u8, 0b11101101));
+        try writer.writeByte(@as(u8, @intCast(0b10110000 | ((cp >> 6) & 0b1111))));
+        try writer.writeByte(@as(u8, @intCast(0b10000000 | (cp & 0b111111))));
     } else {
         return error.CodepointTooLarge;
     }
@@ -185,10 +178,11 @@ pub fn codepointsFromUtf8Alloc(allocator: Allocator, in: []const u8) ![]u21 {
 
 pub fn codepointsToUtf8Alloc(allocator: Allocator, codepoints: []const u21) ![]u8 {
     var out = try std.ArrayList(u8).initCapacity(allocator, codepoints.len);
+    const writer = out.writer();
     defer out.deinit();
 
     for (codepoints) |codepoint| {
-        try appendCodepointToUtf8(codepoint, &out);
+        try writeCodepointToUtf8(codepoint, writer);
     }
 
     return try out.toOwnedSlice();
@@ -211,10 +205,11 @@ pub fn codepointsFromMutf8Alloc(allocator: Allocator, in: []const u8) ![]u21 {
 
 pub fn codepointsToMutf8Alloc(allocator: Allocator, codepoints: []const u21) ![]u8 {
     var out = try std.ArrayList(u8).initCapacity(allocator, codepoints.len);
+    const writer = out.writer();
     defer out.deinit();
 
     for (codepoints) |codepoint| {
-        try appendCodepointToMutf8(codepoint, &out);
+        try writeCodepointToMutf8(codepoint, writer);
     }
 
     return try out.toOwnedSlice();
